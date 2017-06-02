@@ -1,0 +1,99 @@
+rem   CCDProg1
+
+rem   The command "rem" is short for remark and allows the user to add
+rem   remarks or comments to their code to aid the program's legibility.
+rem   Any text appearing after rem (or the double symbol "//") is ignored
+rem   by the InstaBasic compiler.
+
+rem   This program demonstrates the "while" loop and how to program the
+rem   InstaSpec detector to acquire a number of scans (eg 10) and save
+rem   them into appropriate windows/datasets.
+rem   The simplest configuration is to program the detector to acquire
+rem   spectra in 10 single acquisitions i.e. Single scan mode.
+
+rem   NOTE: By positioning the cursor on a particular command and pressing
+rem   Ctrl and F1 simultaneously will bring up the corresponding help topic.
+
+
+cls()
+SetAcquisitionMode(2)                 :rem  Set detector in Accumulate mode
+SetReadoutMode(0)                     :rem  Set for Full Vertically Binned (FVB) spectra
+SetExposureTime(.03)                  :rem  Exposure time is 30 ms
+
+rem   Let the computer generate the start signals (Internal triggering) - simplest
+rem   situation because once the User runs this program the computer will 
+rem   automatically acquire the spectra at the correct rate.
+SetTriggerMode(0)			
+
+rem  Want to subtract the background from the signal so set datatype
+rem  to Counts(Background corrected).		
+SetDataType(2)							
+
+rem  ready to take background first
+SetAcquisitionType(1)
+
+rem  acquire background
+key ("Shield spectrograph from light sources then press any key to acquire a background reading.")
+
+run()
+
+rem  ready to take signal
+SetAcquisitionType(0)		
+
+rem  Now acquire the signal
+key("Switch on light source then press any key to acquire  'Counts (Bg corrected)' signal")
+run()
+
+rem   In the code below, the while command denotes the start of the loop. The
+rem   line "#counter = #0" copies the scan from the acquisition window (always
+rem   #0 by convention) to a new window (#counter - where the variable counter
+rem   ranges from 1 to 10).
+
+
+counter = 1                    :rem Initialize the counter varibale to 1
+while counter < 11
+   run()                       :rem run() acquires a scan
+   #counter = #0
+   counter = counter + 1       :rem increment counter by 1
+wend
+
+
+rem   NB To save the scan to disk you could use the File\Save As... menu option
+rem   after the program has stopped or, alternatively, incorporate the "save"
+rem   command into your program, and specify a filename for each dataset.  The
+rem   following code shows how to save the 10 datasets onto the hard disk under
+rem   10 different filenames.
+
+rem   We could use the same root filename for each dataset eg "test", so each
+rem   dataset would be assigned the names test1.sif, test2.sif,...test10.sif
+rem   accordingly.  Alphabetic variables are called "string" variables and
+rem   always have the string character "$" appended to the name eg. the string
+rem   variable for the root filename could be called root$ and (in this case)
+rem   would denote the root filename "test".
+
+
+counter = 1                     :rem reset counter to 1
+root$ = "test"
+while counter <=10
+    file$ = root$;str$(counter);".sif"
+    save(#counter,file$)
+    counter = counter + 1
+wend
+
+
+rem   The "str$()" command converts a numerical quantity into a string quantity
+rem   so the variable "file$" contains the string variables test1.sif,
+rem   test2.sif,...,test10.sif.  If you wanted to save the datasets into a particular
+rem   directory eg "C:\March12\Data" then the root$ variable should be amended to 
+rem   include this i.e. root$ = "c:\march12\data\test"
+
+
+
+
+
+
+
+
+
+
+
