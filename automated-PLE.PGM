@@ -1,68 +1,13 @@
-rem   Automated PLE
+rem   Acquisition
 rem   Written by Justin Zhou
 
 cls()
 gosub .SetupAcquisition
 
-rem  Now acquire the signal
-key("Switch on light source then press any key to acquire  'Counts (Bg corrected)' signal")
+input("Enter desired starting wavelength (nm):",startWavelength)
+input("Enter desired final wavelength (nm):",endWavelength)
+input("Enter desired step (nm):",stepInterval)
 
-input("Enter starting wavelength (nm)", start_str$)
-input("Enter final wavelength (nm)", end_str$)
-input("Enter step interval (nm)", step_str$)
-start_wavelength = val(start_str$)
-end_wavelength = val(end_str$)
-step_interval = val(step_str$)
-
-folder$ = "c:\temp"
-file$ = "scan"
-proxy_file$ = "proxy.txt"
-delaytime = 1000 * 1.00      // delay of 1.00 seconds in milliseconds
-
-ready = 0                      rem 0 = not ready, 1 = ready
-nscans = (end_wavelength-start_wavelength)/step_interval+1
-
-for i = 1 to nscans
-  ready = 0                    rem initialize to 'Not Ready'
-  current_wavelength = start_wavelength + i*(step_interval-1)
-  proxyfile = folder$;chr$(92);proxy_file$
-
-  while ready <> 1
-     for line = 1 to i
-        read(proxy_file$,status$)    rem for loop to read the correct line of the file
-     next
-     
-    if (status$ <> str$(current_wavelength);" Ready") then                :rem  If system is ready
-     run()
-     fname$ = folder$;chr$(92);file$;"_";current_wavelength;".csv"
-     #0 = #0/10
-     SaveAsciiXY(#0,fname$,delimiter=1)
-     write(proxyfile, (str$(current_wavelength);" Done"))
-     CloseWindow(#1)
-     close()    
-     ready = 1;
-     
-    else                                     :rem if user has not entered a filename
-     close()
-    endif                                    :rem End of "if" block 
-  wend 
-  
-  delay(delaytime)
-next
-
-key("Measurement Completed!")
-
-//*******************  program ends here  **************************
-
-.SetupAcquisition
-  :rem SetAcquisitionMode(1)                 :rem  Set detector in Single Scan mode
-  :rem SetExposureTime(1.00)                 :rem  Exposure time is 1.00 s
-  SetReadoutMode(0)                     :rem  Set for Full Vertically Binned (FVB) spectra  
-  SetTriggerMode(0)                     :rem Internal triggering
-  
-  setaccumulate(1.0, 10, 0)  // 1.0 second exposure time
-                           // 10 in series
-                           // 0 means use minimum possible cycle time
   
   rem  Want to subtract the background from the signal so set datatype
   rem  to Counts(Background corrected).		
@@ -78,4 +23,60 @@ key("Measurement Completed!")
 
   rem  ready to take signal
   SetAcquisitionType(0)
+
+folder$ = "C:\Users\user\Desktop"
+saveFolder$ = "C:\Users\user\Desktop\Automated PLE Data Files"
+file$ = "scan"
+proxy_file$ = "proxy.txt"
+delaytime=1000*1.00
+ready = 0                      
+nscans = (endWavelength - startWavelength)/ stepInterval + 1
+?("Initializing measurements...")
+?("")
+
+for i = 1 to nscans
+  ready = 0                    :rem initialize to 'Not Ready'
+  currWavelength$ = str$(startWavelength + (i-1)*(stepInterval))
+  ?("Acquiring spectrum at ";currWavelength$;" nm") 
+  proxyfile$ = folder$;chr$(92);proxy_file$
+  waved$=currWavelength$;" Ready"
+
+  while ready <> 1
+    delay(delaytime)
+     for line = 1 to 2
+        read(proxyfile$,status$)    :rem for loop to read the correct line of the file
+     next
+
+      //if (status$ <> str$(currentWavelength) ;"Ready") then 
+      if (!strcomp(status$,waved$)) then
+           
+     run()
+     fname$ = saveFolder$;chr$(92);file$;"_";currWavelength$;".csv"
+     SaveAsciiXY(#0,fname$,1)
+     write(proxyfile$, (currWavelength$;" Done"))
+     //CloseWindow(#1)
+     close()    
+     ready = 1
+    endif                                    :rem End of "if" block 
+  wend 
+next
+
+CloseWindow(#0)
+?("")
+?("Measurements Completed!") 
+key("Measurements Completed!")
+
+// ********************* Program ends here ***************************************
+
+
+
+.SetupAcquisition
+  :rem SetAcquisitionMode(1)                 :rem  Set detector in Single Scan mode
+  :rem SetExposureTime(1.00)                 :rem  Exposure time is 1.00 s
+  SetReadoutMode(0)                     :rem  Set for Full Vertically Binned (FVB) spectra  
+  SetTriggerMode(0)                     :rem Internal triggering
+  
+  setAccumulate(1, 10, 0)  // 1.0 second exposure time
+                           // 10 in series
+                           // 0 means use minimum possible cycle time
 return
